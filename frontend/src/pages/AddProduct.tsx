@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 
+// Use environment variable for API URL
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const AddProduct: React.FC = () => {
   const [medicine, setMedicine] = useState({
     name: "",
@@ -16,7 +19,7 @@ const AddProduct: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:5000/api/medicines", {
+    const res = await fetch(`${API_URL}/api/medicines`, {  // CHANGED THIS LINE
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(medicine),
