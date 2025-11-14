@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 
+// Add this line - Vite uses import.meta.env
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 interface Medicine {
   _id: string;
   name: string;
@@ -14,7 +17,8 @@ const Dashboard: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/medicines")
+    // CHANGED: Use the environment variable
+    fetch(`${API_URL}/api/medicines`)
       .then((res) => res.json())
       .then((data) => setMedicines(data))
       .catch((err) => console.error(err));
