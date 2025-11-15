@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import UpdateModal from "./components/UpdateModal"; // ADD THIS IMPORT
-
+import UpdateModal from "../components/UpdateModal";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 interface Medicine {
