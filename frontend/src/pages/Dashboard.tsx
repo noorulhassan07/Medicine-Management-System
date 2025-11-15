@@ -74,20 +74,23 @@ const Dashboard: React.FC = () => {
   const getStatusDot = (expiry: string, qty: number) => {
     const expDate = new Date(expiry);
     const now = new Date();
-    const diffTime = expDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    const isExpiringSoon = diffDays <= 30; // Within 30 days
+    // Calculate months difference for medicines (6 months threshold)
+    const diffMonths = 
+      (expDate.getFullYear() - now.getFullYear()) * 12 + 
+      (expDate.getMonth() - now.getMonth());
+    
+    const isExpiringSoon = diffMonths <= 6; // Within 6 months
     const isLowStock = qty < 15;
 
-    // Yellow: Low stock AND expiring soon
+    // Yellow: Low stock AND expiring soon (within 6 months)
     if (isLowStock && isExpiringSoon) {
       return { color: "#ffc107", label: "Low Stock & Expiring Soon" };
     }
     
     // Red: Expired or out of stock
-    if (diffDays < 0 || qty === 0) {
-      return { color: "#dc3545", label: diffDays < 0 ? "Expired" : "Out of Stock" };
+    if (diffMonths < 0 || qty === 0) {
+      return { color: "#dc3545", label: diffMonths < 0 ? "Expired" : "Out of Stock" };
     }
     
     // Orange: Only low stock
@@ -95,7 +98,7 @@ const Dashboard: React.FC = () => {
       return { color: "#fd7e14", label: "Low Stock" };
     }
     
-    // Orange: Only expiring soon
+    // Orange: Only expiring soon (within 6 months)
     if (isExpiringSoon) {
       return { color: "#fd7e14", label: "Expiring Soon" };
     }
