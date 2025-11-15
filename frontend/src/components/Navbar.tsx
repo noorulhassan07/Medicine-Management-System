@@ -54,6 +54,30 @@ const Navbar: React.FC = () => {
             ➕ Add Medicine
           </Link>
           <Link
+            to="/sales"
+            style={{
+              textDecoration: "none",
+              color: "white",
+              fontSize: "16px",
+              fontWeight: location.pathname === "/sales" ? "bold" : "normal",
+              opacity: location.pathname === "/sales" ? 1 : 0.8,
+            }}
+          >
+            💰 Record Sale
+          </Link>
+          <Link
+            to="/sales-ledger"
+            style={{
+              textDecoration: "none",
+              color: "white",
+              fontSize: "16px",
+              fontWeight: location.pathname === "/sales-ledger" ? "bold" : "normal",
+              opacity: location.pathname === "/sales-ledger" ? 1 : 0.8,
+            }}
+          >
+            📋 Sales Ledger
+          </Link>
+          <Link
             to="/history"
             style={{
               textDecoration: "none",
