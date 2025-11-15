@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-// Add this line - Vite uses import.meta.env
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 interface Medicine {
@@ -15,10 +14,17 @@ interface Medicine {
 
 const Dashboard: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [filteredMedicines, setFilteredMedicines] = useState<Medicine[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStock, setFilterStock] = useState("all");
 
   useEffect(() => {
     fetchMedicines();
   }, []);
+
+  useEffect(() => {
+    filterMedicines();
+  }, [medicines, searchTerm, filterStock]);
 
   const fetchMedicines = async () => {
     try {
@@ -30,13 +36,33 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const filterMedicines = () => {
+    let filtered = medicines;
+
+    // Search by name
+    if (searchTerm) {
+      filtered = filtered.filter(medicine =>
+        medicine.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by stock status
+    if (filterStock !== "all") {
+      filtered = filtered.filter(medicine => {
+        const status = getStatusDot(medicine.expiryDate, medicine.quantity);
+        return status.label.toLowerCase().includes(filterStock);
+      });
+    }
+
+    setFilteredMedicines(filtered);
+  };
+
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
       try {
         await fetch(`${API_URL}/api/medicines/${id}`, {
           method: "DELETE",
         });
-        // Refresh the medicines list
         await fetchMedicines();
         alert("✅ Medicine deleted successfully!");
       } catch (error) {
@@ -75,6 +101,68 @@ const Dashboard: React.FC = () => {
       >
         📊 Medicine Dashboard
       </h2>
+
+      {/* SEARCH AND FILTER BAR */}
+      <div style={{
+        display: "flex",
+        gap: "15px",
+        marginBottom: "20px",
+        flexWrap: "wrap",
+        alignItems: "center",
+        backgroundColor: "white",
+        padding: "15px",
+        borderRadius: "8px",
+        boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
+      }}>
+        {/* Search Input */}
+        <div style={{ flex: 1, minWidth: "250px" }}>
+          <input
+            type="text"
+            placeholder="🔍 Search medicines by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 15px",
+              border: "1px solid #ddd",
+              borderRadius: "25px",
+              fontSize: "14px",
+              outline: "none",
+              transition: "0.3s"
+            }}
+            onFocus={(e) => e.target.style.borderColor = "#007BFF"}
+            onBlur={(e) => e.target.style.borderColor = "#ddd"}
+          />
+        </div>
+
+        {/* Filter Dropdown */}
+        <div>
+          <select
+            value={filterStock}
+            onChange={(e) => setFilterStock(e.target.value)}
+            style={{
+              padding: "10px 15px",
+              border: "1px solid #ddd",
+              borderRadius: "25px",
+              fontSize: "14px",
+              outline: "none",
+              cursor: "pointer"
+            }}
+          >
+            <option value="all">📦 All Medicines</option>
+            <option value="restock">🔵 Restock Needed</option>
+            <option value="expiring">🔴 Expiring Soon</option>
+            <option value="healthy">🟢 Healthy Stock</option>
+          </select>
+        </div>
+
+        {/* Results Count */}
+        <div style={{ color: "#666", fontSize: "14px" }}>
+          Showing {filteredMedicines.length} of {medicines.length} medicines
+        </div>
+      </div>
+
+      {/* MEDICINES TABLE */}
       <table
         style={{
           width: "100%",
@@ -95,12 +183,12 @@ const Dashboard: React.FC = () => {
             <th style={thStyle}>Entry</th>
             <th style={thStyle}>Price (PKR)</th>
             <th style={thStyle}>Status</th>
-            <th style={thStyle}>Actions</th> {/* NEW COLUMN */}
+            <th style={thStyle}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {medicines.length > 0 ? (
-            medicines.map((m, i) => {
+          {filteredMedicines.length > 0 ? (
+            filteredMedicines.map((m, i) => {
               const status = getStatusDot(m.expiryDate, m.quantity);
               return (
                 <tr key={m._id} style={{ textAlign: "center" }}>
@@ -133,7 +221,6 @@ const Dashboard: React.FC = () => {
                     </div>
                   </td>
                   <td style={tdStyle}>
-                    {/* DELETE BUTTON */}
                     <button
                       onClick={() => handleDelete(m._id, m.name)}
                       style={{
@@ -158,7 +245,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <tr>
               <td colSpan={9} style={{ textAlign: "center", padding: "15px" }}>
-                No medicines found.
+                {medicines.length === 0 ? "No medicines found." : "No medicines match your search."}
               </td>
             </tr>
           )}
