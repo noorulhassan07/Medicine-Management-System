@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import UpdateModal from "./components/UpdateModal"; // ADD THIS IMPORT
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -18,8 +17,6 @@ const Dashboard: React.FC = () => {
   const [filteredMedicines, setFilteredMedicines] = useState<Medicine[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStock, setFilterStock] = useState("all");
-  const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
 
   useEffect(() => {
     fetchMedicines();
@@ -58,35 +55,6 @@ const Dashboard: React.FC = () => {
     }
 
     setFilteredMedicines(filtered);
-  };
-
-  const handleUpdate = async (updatedData: Partial<Medicine>) => {
-    if (!selectedMedicine) return;
-
-    try {
-      const res = await fetch(`${API_URL}/api/medicines/${selectedMedicine._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData)
-      });
-
-      if (res.ok) {
-        alert("✅ Medicine updated successfully!");
-        setUpdateModalOpen(false);
-        setSelectedMedicine(null);
-        fetchMedicines(); // Refresh the list
-      } else {
-        const error = await res.json();
-        alert(`❌ Failed to update: ${error.error}`);
-      }
-    } catch (error) {
-      alert("❌ Failed to update medicine");
-    }
-  };
-
-  const openUpdateModal = (medicine: Medicine) => {
-    setSelectedMedicine(medicine);
-    setUpdateModalOpen(true);
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -279,42 +247,23 @@ const Dashboard: React.FC = () => {
                     </div>
                   </td>
                   <td style={tdStyle}>
-                    <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                      <button
-                        onClick={() => openUpdateModal(m)}
-                        style={{
-                          backgroundColor: "#007BFF",
-                          color: "white",
-                          border: "none",
-                          padding: "6px 12px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007BFF"}
-                      >
-                        ✏️ Update
-                      </button>
-                      <button
-                        onClick={() => handleDelete(m._id, m.name)}
-                        style={{
-                          backgroundColor: "#dc3545",
-                          color: "white",
-                          border: "none",
-                          padding: "6px 12px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#c82333"}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#dc3545"}
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleDelete(m._id, m.name)}
+                      style={{
+                        backgroundColor: "#dc3545",
+                        color: "white",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#c82333"}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#dc3545"}
+                    >
+                      🗑️ Delete
+                    </button>
                   </td>
                 </tr>
               );
@@ -328,16 +277,6 @@ const Dashboard: React.FC = () => {
           )}
         </tbody>
       </table>
-
-      {/* Update Modal */}
-      {selectedMedicine && (
-        <UpdateModal
-          medicine={selectedMedicine}
-          isOpen={updateModalOpen}
-          onClose={() => setUpdateModalOpen(false)}
-          onUpdate={handleUpdate}
-        />
-      )}
     </div>
   );
 };
