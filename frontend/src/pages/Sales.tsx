@@ -25,6 +25,7 @@ const Sales: React.FC = () => {
     customerName: ""
   });
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchMedicines();
@@ -60,19 +61,23 @@ const Sales: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     if (!saleForm.medicineId) {
       alert("Please select a medicine");
+      setIsSubmitting(false);
       return;
     }
 
     if (saleForm.quantitySold <= 0) {
       alert("Quantity must be greater than 0");
+      setIsSubmitting(false);
       return;
     }
 
     if (selectedMedicine && saleForm.quantitySold > selectedMedicine.quantity) {
       alert(`Insufficient stock! Available: ${selectedMedicine.quantity}`);
+      setIsSubmitting(false);
       return;
     }
 
@@ -82,6 +87,8 @@ const Sales: React.FC = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(saleForm)
       });
+
+      const responseData = await res.json(); // Always parse response
 
       if (res.ok) {
         alert("✅ Sale recorded successfully!");
@@ -94,11 +101,14 @@ const Sales: React.FC = () => {
         setSelectedMedicine(null);
         fetchMedicines(); // Refresh medicines list
       } else {
-        const error = await res.json();
-        alert(`❌ Failed: ${error.error}`);
+        // Show specific error message from backend
+        alert(`❌ Failed: ${responseData.error || responseData.message || 'Unknown error'}`);
       }
     } catch (error) {
-      alert("❌ Failed to record sale");
+      console.error("Sale recording error:", error);
+      alert("❌ Network error - failed to record sale");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -244,21 +254,22 @@ const Sales: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
+              disabled={isSubmitting}
               style={{
-                backgroundColor: "#28a745",
+                backgroundColor: isSubmitting ? "#6c757d" : "#28a745",
                 color: "white",
                 border: "none",
                 padding: "12px 30px",
                 borderRadius: "4px",
                 fontSize: "16px",
                 fontWeight: "bold",
-                cursor: "pointer",
+                cursor: isSubmitting ? "not-allowed" : "pointer",
                 width: "100%"
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#218838"}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#28a745"}
+              onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = "#218838")}
+              onMouseLeave={(e) => !isSubmitting && (e.currentTarget.style.backgroundColor = "#28a745")}
             >
-              💰 Record Sale
+              {isSubmitting ? "⏳ Recording..." : "💰 Record Sale"}
             </button>
           </div>
         </form>
