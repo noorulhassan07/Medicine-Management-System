@@ -8,6 +8,7 @@ import Navbar from "./components/Navbar";
 import { styles } from "./styles/inlineStyles";
 import Sales from "./pages/Sales";
 import SalesLedger from "./pages/SalesLedger";
+import Analytics from "./pages/Analytics"; // ADD THIS
 
 const App = () => {
   return (
@@ -21,7 +22,7 @@ const App = () => {
         <Route path="/history" element={<History />} />
         <Route path="/sales" element={<Sales />} />
         <Route path="/sales-ledger" element={<SalesLedger />} />
-        {/* Remove Analytics route for now - we'll add it later */}
+        <Route path="/analytics" element={<Analytics />} /> {/* ADD THIS */}
       </Routes>
     </div>
   );
