@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // ADD THIS IMPORT
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -24,6 +25,7 @@ const DashboardOverview: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // ADD THIS
 
   useEffect(() => {
     fetchData();
@@ -83,7 +85,7 @@ const DashboardOverview: React.FC = () => {
     <div style={{ padding: "30px", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       <h2
         style={{
-          marginBottom: "30px",
+          marginBottom: "20px", // Reduced margin
           fontWeight: "bold",
           fontSize: "32px",
           background: "linear-gradient(90deg, #007BFF, #00C6FF)",
@@ -98,7 +100,107 @@ const DashboardOverview: React.FC = () => {
         📊 Dashboard Overview
       </h2>
 
-      {/* Summary Cards */}
+      {/* QUICK ACTION BUTTONS - ADD THIS SECTION */}
+      <div style={{
+        display: "flex",
+        gap: "15px",
+        marginBottom: "30px",
+        flexWrap: "wrap"
+      }}>
+        <button
+          onClick={() => navigate("/dashboard")}
+          style={{
+            backgroundColor: "#007BFF",
+            color: "white",
+            border: "none",
+            padding: "12px 25px",
+            borderRadius: "25px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(0, 123, 255, 0.3)",
+            transition: "all 0.3s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          📋 View All Medicines
+        </button>
+
+        <button
+          onClick={() => navigate("/analytics")}
+          style={{
+            backgroundColor: "#6f42c1",
+            color: "white",
+            border: "none",
+            padding: "12px 25px",
+            borderRadius: "25px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(111, 66, 193, 0.3)",
+            transition: "all 0.3s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          📈 Sales Analytics
+        </button>
+
+        <button
+          onClick={() => navigate("/sales")}
+          style={{
+            backgroundColor: "#28a745",
+            color: "white",
+            border: "none",
+            padding: "12px 25px",
+            borderRadius: "25px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(40, 167, 69, 0.3)",
+            transition: "all 0.3s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          💰 Record Sale
+        </button>
+
+        <button
+          onClick={() => navigate("/add")}
+          style={{
+            backgroundColor: "#fd7e14",
+            color: "white",
+            border: "none",
+            padding: "12px 25px",
+            borderRadius: "25px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 8px rgba(253, 126, 20, 0.3)",
+            transition: "all 0.3s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
+        >
+          ➕ Add New Medicine
+        </button>
+      </div>
+
+      {/* Summary Cards - REST OF YOUR EXISTING CODE */}
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
