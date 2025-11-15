@@ -74,13 +74,34 @@ const Dashboard: React.FC = () => {
   const getStatusDot = (expiry: string, qty: number) => {
     const expDate = new Date(expiry);
     const now = new Date();
-    const diffMonths =
-      (expDate.getFullYear() - now.getFullYear()) * 12 +
-      (expDate.getMonth() - now.getMonth());
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const isExpiringSoon = diffDays <= 30; // Within 30 days
+    const isLowStock = qty < 15;
 
-    if (diffMonths <= 8) return { color: "red", label: "Expiring Soon" };
-    if (qty < 15) return { color: "blue", label: "Restock Needed" };
-    return { color: "green", label: "Healthy Stock" };
+    // Yellow: Low stock AND expiring soon
+    if (isLowStock && isExpiringSoon) {
+      return { color: "#ffc107", label: "Low Stock & Expiring Soon" };
+    }
+    
+    // Red: Expired or out of stock
+    if (diffDays < 0 || qty === 0) {
+      return { color: "#dc3545", label: diffDays < 0 ? "Expired" : "Out of Stock" };
+    }
+    
+    // Orange: Only low stock
+    if (isLowStock) {
+      return { color: "#fd7e14", label: "Low Stock" };
+    }
+    
+    // Orange: Only expiring soon
+    if (isExpiringSoon) {
+      return { color: "#fd7e14", label: "Expiring Soon" };
+    }
+    
+    // Green: Good stock and not expiring soon
+    return { color: "#28a745", label: "Healthy Stock" };
   };
 
   return (
@@ -150,8 +171,10 @@ const Dashboard: React.FC = () => {
             }}
           >
             <option value="all">📦 All Medicines</option>
-            <option value="restock">🔵 Restock Needed</option>
-            <option value="expiring">🔴 Expiring Soon</option>
+            <option value="low stock & expiring soon">🟡 Low Stock & Expiring Soon</option>
+            <option value="low stock">🟠 Low Stock</option>
+            <option value="expiring soon">🟠 Expiring Soon</option>
+            <option value="expired">🔴 Expired/Out of Stock</option>
             <option value="healthy">🟢 Healthy Stock</option>
           </select>
         </div>
