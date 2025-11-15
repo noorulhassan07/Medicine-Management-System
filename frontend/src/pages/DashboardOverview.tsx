@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ADD THIS IMPORT
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -25,7 +25,7 @@ const DashboardOverview: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // ADD THIS
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -82,16 +82,16 @@ const DashboardOverview: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: "30px", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div style={{ padding: "20px", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       <h2
         style={{
-          marginBottom: "20px", // Reduced margin
+          marginBottom: "25px",
           fontWeight: "bold",
-          fontSize: "32px",
+          fontSize: "28px",
           background: "linear-gradient(90deg, #007BFF, #00C6FF)",
           color: "white",
           display: "inline-block",
-          padding: "15px 30px",
+          padding: "12px 25px",
           borderRadius: "50px",
           boxShadow: "0 4px 15px rgba(0, 123, 255, 0.3)",
           letterSpacing: "1px",
@@ -100,196 +100,116 @@ const DashboardOverview: React.FC = () => {
         📊 Dashboard Overview
       </h2>
 
-      {/* QUICK ACTION BUTTONS - ADD THIS SECTION */}
-      <div style={{
-        display: "flex",
-        gap: "15px",
-        marginBottom: "30px",
-        flexWrap: "wrap"
-      }}>
-        <button
-          onClick={() => navigate("/dashboard")}
-          style={{
-            backgroundColor: "#007BFF",
-            color: "white",
-            border: "none",
-            padding: "12px 25px",
-            borderRadius: "25px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 8px rgba(0, 123, 255, 0.3)",
-            transition: "all 0.3s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          📋 View All Medicines
-        </button>
-
-        <button
-          onClick={() => navigate("/analytics")}
-          style={{
-            backgroundColor: "#6f42c1",
-            color: "white",
-            border: "none",
-            padding: "12px 25px",
-            borderRadius: "25px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 8px rgba(111, 66, 193, 0.3)",
-            transition: "all 0.3s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          📈 Sales Analytics
-        </button>
-
-        <button
-          onClick={() => navigate("/sales")}
-          style={{
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            padding: "12px 25px",
-            borderRadius: "25px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 8px rgba(40, 167, 69, 0.3)",
-            transition: "all 0.3s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          💰 Record Sale
-        </button>
-
-        <button
-          onClick={() => navigate("/add")}
-          style={{
-            backgroundColor: "#fd7e14",
-            color: "white",
-            border: "none",
-            padding: "12px 25px",
-            borderRadius: "25px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 8px rgba(253, 126, 20, 0.3)",
-            transition: "all 0.3s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-          onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-        >
-          ➕ Add New Medicine
-        </button>
-      </div>
-
-      {/* Summary Cards - REST OF YOUR EXISTING CODE */}
+      {/* Summary Cards - 3 in a row */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-        gap: "20px",
-        marginBottom: "30px"
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: "15px",
+        marginBottom: "25px"
       }}>
         {/* Total Medicines Card */}
         <div style={{
           backgroundColor: "white",
-          padding: "25px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
           textAlign: "center",
-          borderLeft: "6px solid #007BFF"
+          borderLeft: "4px solid #007BFF",
+          minHeight: "120px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "10px" }}>💊</div>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>Total Medicines</h3>
-          <div style={{ fontSize: "36px", fontWeight: "bold", color: "#007BFF" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>💊</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "14px", fontWeight: "600" }}>Total Medicines</h3>
+          <div style={{ fontSize: "28px", fontWeight: "bold", color: "#007BFF", marginBottom: "5px" }}>
             {totalMedicines}
           </div>
-          <small style={{ color: "#666" }}>Active products in inventory</small>
+          <small style={{ color: "#666", fontSize: "12px" }}>Active products in inventory</small>
         </div>
 
         {/* Low Stock Card */}
         <div style={{
           backgroundColor: "white",
-          padding: "25px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
           textAlign: "center",
-          borderLeft: "6px solid #ffc107"
+          borderLeft: "4px solid #ffc107",
+          minHeight: "120px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "10px" }}>📉</div>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>Low Stock Items</h3>
-          <div style={{ fontSize: "36px", fontWeight: "bold", color: "#ffc107" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>📉</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "14px", fontWeight: "600" }}>Low Stock Items</h3>
+          <div style={{ fontSize: "28px", fontWeight: "bold", color: "#ffc107", marginBottom: "5px" }}>
             {lowStockItems}
           </div>
-          <small style={{ color: "#666" }}>Stock below 15 units</small>
+          <small style={{ color: "#666", fontSize: "12px" }}>Stock below 15 units</small>
         </div>
 
         {/* Expiring Soon Card */}
         <div style={{
           backgroundColor: "white",
-          padding: "25px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
           textAlign: "center",
-          borderLeft: "6px solid #fd7e14"
+          borderLeft: "4px solid #fd7e14",
+          minHeight: "120px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "10px" }}>⚠️</div>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>Expiring Soon</h3>
-          <div style={{ fontSize: "36px", fontWeight: "bold", color: "#fd7e14" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>⚠️</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "14px", fontWeight: "600" }}>Expiring Soon</h3>
+          <div style={{ fontSize: "28px", fontWeight: "bold", color: "#fd7e14", marginBottom: "5px" }}>
             {expiringSoon}
           </div>
-          <small style={{ color: "#666" }}>Expires within 6 months</small>
+          <small style={{ color: "#666", fontSize: "12px" }}>Expires within 6 months</small>
         </div>
 
         {/* Need Restock Card */}
         <div style={{
           backgroundColor: "white",
-          padding: "25px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
           textAlign: "center",
-          borderLeft: "6px solid #dc3545"
+          borderLeft: "4px solid #dc3545",
+          minHeight: "120px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "10px" }}>🔄</div>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>Need Restock</h3>
-          <div style={{ fontSize: "36px", fontWeight: "bold", color: "#dc3545" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>🔄</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "14px", fontWeight: "600" }}>Need Restock</h3>
+          <div style={{ fontSize: "28px", fontWeight: "bold", color: "#dc3545", marginBottom: "5px" }}>
             {needRestock}
           </div>
-          <small style={{ color: "#666" }}>Out of stock items</small>
+          <small style={{ color: "#666", fontSize: "12px" }}>Out of stock items</small>
         </div>
 
         {/* Today's Sales Card */}
         <div style={{
           backgroundColor: "white",
-          padding: "25px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
           textAlign: "center",
-          borderLeft: "6px solid #28a745"
+          borderLeft: "4px solid #28a745",
+          minHeight: "120px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "10px" }}>💰</div>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>Today's Sales</h3>
-          <div style={{ fontSize: "28px", fontWeight: "bold", color: "#28a745", marginBottom: "5px" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>💰</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "14px", fontWeight: "600" }}>Today's Sales</h3>
+          <div style={{ fontSize: "20px", fontWeight: "bold", color: "#28a745", marginBottom: "5px" }}>
             {todaySales} PKR
           </div>
-          <div style={{ fontSize: "16px", color: "#666" }}>
+          <div style={{ fontSize: "14px", color: "#666" }}>
             {todaySalesCount} transactions
           </div>
         </div>
@@ -297,18 +217,22 @@ const DashboardOverview: React.FC = () => {
         {/* Total Inventory Value */}
         <div style={{
           backgroundColor: "white",
-          padding: "25px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow: "0 3px 10px rgba(0,0,0,0.08)",
           textAlign: "center",
-          borderLeft: "6px solid #6f42c1"
+          borderLeft: "4px solid #6f42c1",
+          minHeight: "120px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "10px" }}>📦</div>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>Inventory Value</h3>
-          <div style={{ fontSize: "28px", fontWeight: "bold", color: "#6f42c1" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>📦</div>
+          <h3 style={{ margin: "0 0 8px 0", color: "#333", fontSize: "14px", fontWeight: "600" }}>Inventory Value</h3>
+          <div style={{ fontSize: "20px", fontWeight: "bold", color: "#6f42c1" }}>
             {medicines.reduce((total, med) => total + (med.quantity * med.price), 0)} PKR
           </div>
-          <small style={{ color: "#666" }}>Total stock value</small>
+          <small style={{ color: "#666", fontSize: "12px" }}>Total stock value</small>
         </div>
       </div>
 
@@ -316,26 +240,34 @@ const DashboardOverview: React.FC = () => {
       <div style={{
         display: "grid",
         gridTemplateColumns: "1fr 1fr",
-        gap: "20px",
-        marginTop: "20px"
+        gap: "15px",
+        marginTop: "10px"
       }}>
         {/* Low Stock List */}
         <div style={{
           backgroundColor: "white",
-          padding: "20px",
+          padding: "15px",
           borderRadius: "10px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
         }}>
-          <h4 style={{ margin: "0 0 15px 0", color: "#ffc107", display: "flex", alignItems: "center", gap: "8px" }}>
+          <h4 style={{ 
+            margin: "0 0 12px 0", 
+            color: "#ffc107", 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            fontSize: "14px"
+          }}>
             📉 Low Stock Items ({lowStockItems})
           </h4>
           {medicines.filter(med => med.quantity < 15).slice(0, 5).map(med => (
             <div key={med._id} style={{
-              padding: "10px",
-              borderBottom: "1px solid #eee",
+              padding: "8px",
+              borderBottom: "1px solid #f0f0f0",
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center"
+              alignItems: "center",
+              fontSize: "13px"
             }}>
               <span>{med.name}</span>
               <span style={{ 
@@ -346,17 +278,24 @@ const DashboardOverview: React.FC = () => {
               </span>
             </div>
           ))}
-          {lowStockItems === 0 && <div style={{ padding: "10px", color: "#666", textAlign: "center" }}>No low stock items</div>}
+          {lowStockItems === 0 && <div style={{ padding: "8px", color: "#666", textAlign: "center", fontSize: "13px" }}>No low stock items</div>}
         </div>
 
         {/* Expiring Soon List */}
         <div style={{
           backgroundColor: "white",
-          padding: "20px",
+          padding: "15px",
           borderRadius: "10px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
         }}>
-          <h4 style={{ margin: "0 0 15px 0", color: "#fd7e14", display: "flex", alignItems: "center", gap: "8px" }}>
+          <h4 style={{ 
+            margin: "0 0 12px 0", 
+            color: "#fd7e14", 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            fontSize: "14px"
+          }}>
             ⚠️ Expiring Soon ({expiringSoon})
           </h4>
           {medicines.filter(med => {
@@ -367,11 +306,12 @@ const DashboardOverview: React.FC = () => {
             return diffMonths <= 6 && diffMonths >= 0;
           }).slice(0, 5).map(med => (
             <div key={med._id} style={{
-              padding: "10px",
-              borderBottom: "1px solid #eee",
+              padding: "8px",
+              borderBottom: "1px solid #f0f0f0",
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center"
+              alignItems: "center",
+              fontSize: "13px"
             }}>
               <span>{med.name}</span>
               <span style={{ color: "#fd7e14", fontWeight: "bold" }}>
@@ -379,7 +319,7 @@ const DashboardOverview: React.FC = () => {
               </span>
             </div>
           ))}
-          {expiringSoon === 0 && <div style={{ padding: "10px", color: "#666", textAlign: "center" }}>No expiring items</div>}
+          {expiringSoon === 0 && <div style={{ padding: "8px", color: "#666", textAlign: "center", fontSize: "13px" }}>No expiring items</div>}
         </div>
       </div>
     </div>
