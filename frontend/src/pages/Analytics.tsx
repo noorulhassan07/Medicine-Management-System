@@ -60,13 +60,14 @@ const Analytics: React.FC = () => {
     }
   });
 
-  // Calculate daily sales data for line charts
+  // Calculate daily sales data for line charts - FIXED VERSION
   const getDailySalesData = () => {
     const dailyData: Record<string, { total: number; count: number; date: Date }> = {};
     
     filteredSales.forEach(sale => {
       const date = new Date(sale.saleDate);
-      const dateKey = date.toLocaleDateString();
+      // Use ISO string without time for consistent grouping
+      const dateKey = date.toISOString().split('T')[0];
       
       if (!dailyData[dateKey]) {
         dailyData[dateKey] = { total: 0, count: 0, date };
@@ -77,7 +78,10 @@ const Analytics: React.FC = () => {
 
     // Convert to array and sort by date
     return Object.entries(dailyData)
-      .map(([_, data]) => data)
+      .map(([dateKey, data]) => ({
+        ...data,
+        date: new Date(dateKey) // Ensure proper date object
+      }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   };
 
@@ -104,34 +108,76 @@ const Analytics: React.FC = () => {
   const averageSale = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
   // Find max values for chart scaling
-  const maxRevenue = Math.max(...dailySalesData.map(d => d.total), 1);
-  const maxQuantity = Math.max(...dailySalesData.map(d => d.count), 1);
+  const maxRevenue = dailySalesData.length > 0 ? Math.max(...dailySalesData.map(d => d.total), 1) : 1;
+  const maxQuantity = dailySalesData.length > 0 ? Math.max(...dailySalesData.map(d => d.count), 1) : 1;
 
-  // Line chart component
+  // Simple Line Chart Component - FIXED VERSION
   const LineChart = ({ data, valueKey, color, title }: { 
     data: { date: Date; total: number; count: number }[], 
     valueKey: 'total' | 'count',
     color: string,
     title: string 
   }) => {
+    const chartHeight = 200;
+    const chartWidth = 500;
+    const padding = 40;
+
     if (data.length === 0) {
       return (
-        <div style={{ textAlign: "center", width: "100%", color: "#666", padding: "40px" }}>
-          No sales data available
+        <div>
+          <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>{title}</h3>
+          <div style={{ 
+            height: `${chartHeight}px`, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            color: "#666"
+          }}>
+            No sales data available for the selected period
+          </div>
         </div>
       );
     }
 
-    const chartHeight = 200;
-    const chartWidth = Math.max(400, data.length * 40);
-    const padding = 40;
+    if (data.length === 1) {
+      // Handle single data point case
+      const singleValue = valueKey === 'total' ? data[0].total : data[0].count;
+      return (
+        <div>
+          <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>{title}</h3>
+          <div style={{ 
+            height: `${chartHeight}px`, 
+            display: "flex", 
+            flexDirection: "column",
+            alignItems: "center", 
+            justifyContent: "center",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            color: color,
+            fontWeight: "bold",
+            fontSize: "24px"
+          }}>
+            <div>{singleValue} {valueKey === 'total' ? 'PKR' : ''}</div>
+            <div style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>
+              Only one data point available
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-    const getX = (index: number) => padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
+    const getX = (index: number) => {
+      return padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
+    };
+
     const getY = (value: number, maxValue: number) => {
       const scaledValue = (value / maxValue) * (chartHeight - 2 * padding);
       return chartHeight - padding - scaledValue;
     };
 
+    // Generate points for the polyline
     const points = data.map((item, index) => {
       const value = valueKey === 'total' ? item.total : item.count;
       const maxValue = valueKey === 'total' ? maxRevenue : maxQuantity;
@@ -141,8 +187,8 @@ const Analytics: React.FC = () => {
     return (
       <div>
         <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>{title}</h3>
-        <div style={{ position: "relative", height: `${chartHeight}px`, overflowX: "auto" }}>
-          <svg width={chartWidth} height={chartHeight} style={{ minWidth: "100%" }}>
+        <div style={{ position: "relative" }}>
+          <svg width={chartWidth} height={chartHeight}>
             {/* Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
               <line
@@ -184,7 +230,7 @@ const Analytics: React.FC = () => {
               points={points}
             />
 
-            {/* Data points and labels */}
+            {/* Data points */}
             {data.map((item, index) => {
               const value = valueKey === 'total' ? item.total : item.count;
               const maxValue = valueKey === 'total' ? maxRevenue : maxQuantity;
@@ -215,7 +261,7 @@ const Analytics: React.FC = () => {
                   {/* Date label */}
                   <text
                     x={x}
-                    y={chartHeight - 5}
+                    y={chartHeight - 10}
                     textAnchor="middle"
                     fontSize="10"
                     fill="#666"
@@ -268,6 +314,18 @@ const Analytics: React.FC = () => {
         📈 Sales Analytics
       </h2>
 
+      {/* Debug Info - You can remove this later */}
+      <div style={{
+        backgroundColor: "#fff3cd",
+        padding: "10px",
+        borderRadius: "5px",
+        marginBottom: "20px",
+        border: "1px solid #ffeaa7",
+        fontSize: "12px"
+      }}>
+        <strong>Debug Info:</strong> {filteredSales.length} sales found, {dailySalesData.length} days with data
+      </div>
+
       {/* Time Range Filter */}
       <div style={{
         backgroundColor: "white",
@@ -318,6 +376,7 @@ const Analytics: React.FC = () => {
           <div style={{ fontSize: "24px", fontWeight: "bold", color: "#28a745" }}>
             {totalRevenue.toFixed(2)} PKR
           </div>
+          <small style={{ color: "#666" }}>Selected period</small>
         </div>
 
         <div style={{
@@ -331,6 +390,7 @@ const Analytics: React.FC = () => {
           <div style={{ fontSize: "24px", fontWeight: "bold", color: "#007BFF" }}>
             {totalTransactions}
           </div>
+          <small style={{ color: "#666" }}>Selected period</small>
         </div>
 
         <div style={{
@@ -344,6 +404,7 @@ const Analytics: React.FC = () => {
           <div style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107" }}>
             {averageSale.toFixed(2)} PKR
           </div>
+          <small style={{ color: "#666" }}>Per transaction</small>
         </div>
       </div>
 
@@ -365,7 +426,7 @@ const Analytics: React.FC = () => {
             data={dailySalesData}
             valueKey="total"
             color="#28a745"
-            title="Daily Revenue Trend"
+            title="Daily Revenue Trend (PKR)"
           />
         </div>
 
