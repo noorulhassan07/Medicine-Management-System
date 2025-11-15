@@ -5,6 +5,8 @@ import AddProduct from "./pages/AddProduct";
 import History from "./pages/History"; // ADD THIS IMPORT
 import Navbar from "./components/Navbar";
 import { styles } from "./styles/inlineStyles";
+import Sales from "./pages/Sales"; // ADD THIS IMPORT
+import SalesLedger from "./pages/SalesLedger"; // ADD THIS IMPORT
 
 const App = () => {
   return (
@@ -14,6 +16,8 @@ const App = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/add" element={<AddProduct />} />
         <Route path="/history" element={<History />} /> {/* ADD THIS ROUTE */}
+        <Route path="/sales" element={<Sales />} /> {/* ADD THIS ROUTE */}
+        <Route path="/sales-ledger" element={<SalesLedger />} /> 
       </Routes>
     </div>
   );
