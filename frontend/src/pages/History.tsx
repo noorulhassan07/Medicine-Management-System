@@ -9,10 +9,6 @@ interface HistoryEntry {
   action: string;
   details: string;
   timestamp: string;
-  quantity?: number;
-  price?: number;
-  totalAmount?: number;
-  customerName?: string;
   previousData?: any;
   newData?: any;
 }
@@ -46,58 +42,17 @@ const History: React.FC = () => {
     } catch (err) {
       console.error("Failed to fetch history", err);
       setError(err instanceof Error ? err.message : "Failed to load history");
-      // Set some mock data for testing if API fails
-      setHistory(getMockHistoryData());
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock data for testing if API is not available
-  const getMockHistoryData = (): HistoryEntry[] => {
-    return [
-      {
-        _id: "1",
-        medicineId: "med1",
-        medicineName: "Paracetamol",
-        action: "sale",
-        details: "Sold to customer",
-        timestamp: new Date().toISOString(),
-        quantity: 10,
-        price: 5,
-        totalAmount: 50,
-        customerName: "John Doe"
-      },
-      {
-        _id: "2",
-        medicineId: "med2",
-        medicineName: "Aspirin",
-        action: "created",
-        details: "Added new medicine",
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-        quantity: 100,
-        price: 8
-      },
-      {
-        _id: "3",
-        medicineId: "med3",
-        medicineName: "Vitamin C",
-        action: "updated",
-        details: "Updated stock quantity",
-        timestamp: new Date(Date.now() - 172800000).toISOString(),
-        quantity: 50,
-        price: 15
-      }
-    ];
-  };
-
   const getActionColor = (action: string) => {
     switch (action) {
       case 'created': return '#28a745';
-      case 'sale': return '#007BFF';
+      case 'sold': return '#007BFF'; // Changed from 'sale' to 'sold'
       case 'updated': return '#ffc107';
       case 'deleted': return '#dc3545';
-      case 'restocked': return '#17a2b8';
       default: return '#6c757d';
     }
   };
@@ -105,10 +60,9 @@ const History: React.FC = () => {
   const getActionIcon = (action: string) => {
     switch (action) {
       case 'created': return '📦';
-      case 'sale': return '💰';
+      case 'sold': return '💰'; // Changed from 'sale' to 'sold'
       case 'updated': return '✏️';
       case 'deleted': return '🗑️';
-      case 'restocked': return '🔄';
       default: return '📝';
     }
   };
@@ -116,37 +70,16 @@ const History: React.FC = () => {
   const getActionLabel = (action: string) => {
     switch (action) {
       case 'created': return 'Medicine Added';
-      case 'sale': return 'Sale Recorded';
+      case 'sold': return 'Sale Recorded'; // Changed from 'sale' to 'sold'
       case 'updated': return 'Medicine Updated';
       case 'deleted': return 'Medicine Deleted';
-      case 'restocked': return 'Stock Updated';
       default: return action;
     }
   };
 
   const formatDetails = (entry: HistoryEntry) => {
-    switch (entry.action) {
-      case 'sale':
-        return `Sold ${entry.quantity} units to ${entry.customerName || 'Customer'} for ${entry.totalAmount} PKR`;
-      
-      case 'created':
-        return `Added to inventory with ${entry.quantity} units at ${entry.price} PKR each`;
-      
-      case 'updated':
-        if (entry.details && entry.details !== 'Medicine updated') {
-          return entry.details;
-        }
-        return 'Medicine information updated';
-      
-      case 'restocked':
-        return `Stock updated to ${entry.quantity} units`;
-      
-      case 'deleted':
-        return 'Removed from inventory permanently';
-      
-      default:
-        return entry.details;
-    }
+    // Use the details from backend directly
+    return entry.details;
   };
 
   const filteredHistory = history.filter(entry => {
@@ -217,7 +150,22 @@ const History: React.FC = () => {
           marginBottom: "20px",
           border: "1px solid #f5c6cb"
         }}>
-          <strong>⚠️ Connection Issue:</strong> {error}. Showing sample data for demonstration.
+          <strong>⚠️ Connection Issue:</strong> {error}
+          <div style={{ marginTop: "10px" }}>
+            <button 
+              onClick={fetchHistory}
+              style={{
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                cursor: "pointer"
+              }}
+            >
+              Retry
+            </button>
+          </div>
         </div>
       )}
 
@@ -258,10 +206,9 @@ const History: React.FC = () => {
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {[
             { value: "all", label: "📋 All Activities", emoji: "📋" },
-            { value: "sale", label: "Sales", emoji: "💰" },
+            { value: "sold", label: "Sales", emoji: "💰" }, // Changed from 'sale' to 'sold'
             { value: "created", label: "Additions", emoji: "📦" },
             { value: "updated", label: "Updates", emoji: "✏️" },
-            { value: "restocked", label: "Restocks", emoji: "🔄" },
             { value: "deleted", label: "Deletions", emoji: "🗑️" }
           ].map(({ value, label, emoji }) => (
             <button
@@ -351,7 +298,7 @@ const History: React.FC = () => {
 
               {/* Activities for this date */}
               <div style={{ padding: "10px" }}>
-                {entries.map((entry, index) => (
+                {entries.map((entry) => (
                   <div
                     key={entry._id}
                     style={{
@@ -441,29 +388,6 @@ const History: React.FC = () => {
                           </div>
                         </div>
                       </div>
-
-                      {/* Additional Info */}
-                      {(entry.quantity || entry.price) && (
-                        <div style={{ 
-                          display: "flex", 
-                          gap: "15px", 
-                          marginTop: "8px",
-                          fontSize: "12px",
-                          color: "#666"
-                        }}>
-                          {entry.quantity && (
-                            <span>📦 Quantity: {entry.quantity}</span>
-                          )}
-                          {entry.price && (
-                            <span>💰 Price: {entry.price} PKR</span>
-                          )}
-                          {entry.totalAmount && (
-                            <span style={{ color: "#28a745", fontWeight: "bold" }}>
-                              💵 Total: {entry.totalAmount} PKR
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -477,7 +401,7 @@ const History: React.FC = () => {
             <div style={{ fontSize: "14px", color: "#999" }}>
               {searchTerm || filter !== "all" 
                 ? "Try changing your search or filter criteria" 
-                : "Business activities will appear here as they occur"
+                : "No history records found. Activities will appear here as they occur."
               }
             </div>
           </div>
