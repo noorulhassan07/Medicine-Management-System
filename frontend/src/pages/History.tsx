@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = "https://medicine-management-system-backend-production.up.railway.app";
 
 interface HistoryEntry {
   _id: string;
@@ -30,7 +30,10 @@ const History: React.FC = () => {
       setError("");
       console.log("Fetching history from:", `${API_URL}/api/medicines/history`);
       
-      const res = await fetch(`${API_URL}/api/medicines/history/all`);
+      const res = await fetch(`${API_URL}/api/medicines/history`);
+      
+      console.log("Response status:", res.status);
+      
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
@@ -49,7 +52,7 @@ const History: React.FC = () => {
   const getActionColor = (action: string) => {
     switch (action) {
       case 'created': return '#28a745';
-      case 'sold': return '#007BFF'; // Changed from 'sale' to 'sold'
+      case 'sold': return '#007BFF';
       case 'updated': return '#ffc107';
       case 'deleted': return '#dc3545';
       default: return '#6c757d';
@@ -59,7 +62,7 @@ const History: React.FC = () => {
   const getActionIcon = (action: string) => {
     switch (action) {
       case 'created': return '📦';
-      case 'sold': return '💰'; // Changed from 'sale' to 'sold'
+      case 'sold': return '💰';
       case 'updated': return '✏️';
       case 'deleted': return '🗑️';
       default: return '📝';
@@ -69,7 +72,7 @@ const History: React.FC = () => {
   const getActionLabel = (action: string) => {
     switch (action) {
       case 'created': return 'Medicine Added';
-      case 'sold': return 'Sale Recorded'; // Changed from 'sale' to 'sold'
+      case 'sold': return 'Sale Recorded';
       case 'updated': return 'Medicine Updated';
       case 'deleted': return 'Medicine Deleted';
       default: return action;
@@ -77,7 +80,6 @@ const History: React.FC = () => {
   };
 
   const formatDetails = (entry: HistoryEntry) => {
-    // Use the details from backend directly
     return entry.details;
   };
 
@@ -205,7 +207,7 @@ const History: React.FC = () => {
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {[
             { value: "all", label: "📋 All Activities", emoji: "📋" },
-            { value: "sold", label: "Sales", emoji: "💰" }, // Changed from 'sale' to 'sold'
+            { value: "sold", label: "Sales", emoji: "💰" },
             { value: "created", label: "Additions", emoji: "📦" },
             { value: "updated", label: "Updates", emoji: "✏️" },
             { value: "deleted", label: "Deletions", emoji: "🗑️" }
