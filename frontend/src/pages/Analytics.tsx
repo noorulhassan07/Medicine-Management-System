@@ -60,16 +60,28 @@ const Analytics: React.FC = () => {
     }
   });
 
-  // Calculate daily sales
-  const dailySales = filteredSales.reduce((acc, sale) => {
-    const date = new Date(sale.saleDate).toLocaleDateString();
-    if (!acc[date]) {
-      acc[date] = { total: 0, count: 0 };
-    }
-    acc[date].total += sale.totalAmount;
-    acc[date].count += 1;
-    return acc;
-  }, {} as Record<string, { total: number; count: number }>);
+  // Calculate daily sales data for line charts
+  const getDailySalesData = () => {
+    const dailyData: Record<string, { total: number; count: number; date: Date }> = {};
+    
+    filteredSales.forEach(sale => {
+      const date = new Date(sale.saleDate);
+      const dateKey = date.toLocaleDateString();
+      
+      if (!dailyData[dateKey]) {
+        dailyData[dateKey] = { total: 0, count: 0, date };
+      }
+      dailyData[dateKey].total += sale.totalAmount;
+      dailyData[dateKey].count += 1;
+    });
+
+    // Convert to array and sort by date
+    return Object.entries(dailyData)
+      .map(([_, data]) => data)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  };
+
+  const dailySalesData = getDailySalesData();
 
   // Top selling medicines
   const topMedicines = filteredSales.reduce((acc, sale) => {
@@ -92,8 +104,150 @@ const Analytics: React.FC = () => {
   const averageSale = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
   // Find max values for chart scaling
-  const maxRevenue = Math.max(...Object.values(dailySales).map(d => d.total), 1);
-  const maxQuantity = Math.max(...Object.values(dailySales).map(d => d.count), 1);
+  const maxRevenue = Math.max(...dailySalesData.map(d => d.total), 1);
+  const maxQuantity = Math.max(...dailySalesData.map(d => d.count), 1);
+
+  // Line chart component
+  const LineChart = ({ data, valueKey, color, title }: { 
+    data: { date: Date; total: number; count: number }[], 
+    valueKey: 'total' | 'count',
+    color: string,
+    title: string 
+  }) => {
+    if (data.length === 0) {
+      return (
+        <div style={{ textAlign: "center", width: "100%", color: "#666", padding: "40px" }}>
+          No sales data available
+        </div>
+      );
+    }
+
+    const chartHeight = 200;
+    const chartWidth = Math.max(400, data.length * 40);
+    const padding = 40;
+
+    const getX = (index: number) => padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
+    const getY = (value: number, maxValue: number) => {
+      const scaledValue = (value / maxValue) * (chartHeight - 2 * padding);
+      return chartHeight - padding - scaledValue;
+    };
+
+    const points = data.map((item, index) => {
+      const value = valueKey === 'total' ? item.total : item.count;
+      const maxValue = valueKey === 'total' ? maxRevenue : maxQuantity;
+      return `${getX(index)},${getY(value, maxValue)}`;
+    }).join(' ');
+
+    return (
+      <div>
+        <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>{title}</h3>
+        <div style={{ position: "relative", height: `${chartHeight}px`, overflowX: "auto" }}>
+          <svg width={chartWidth} height={chartHeight} style={{ minWidth: "100%" }}>
+            {/* Grid lines */}
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+              <line
+                key={i}
+                x1={padding}
+                y1={padding + (chartHeight - 2 * padding) * ratio}
+                x2={chartWidth - padding}
+                y2={padding + (chartHeight - 2 * padding) * ratio}
+                stroke="#f0f0f0"
+                strokeWidth="1"
+              />
+            ))}
+
+            {/* Y-axis labels */}
+            {[0, 0.5, 1].map((ratio, i) => {
+              const value = Math.round((valueKey === 'total' ? maxRevenue : maxQuantity) * ratio);
+              return (
+                <text
+                  key={i}
+                  x={padding - 5}
+                  y={padding + (chartHeight - 2 * padding) * (1 - ratio)}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fontSize="10"
+                  fill="#666"
+                >
+                  {value}
+                </text>
+              );
+            })}
+
+            {/* Line */}
+            <polyline
+              fill="none"
+              stroke={color}
+              strokeWidth="3"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              points={points}
+            />
+
+            {/* Data points and labels */}
+            {data.map((item, index) => {
+              const value = valueKey === 'total' ? item.total : item.count;
+              const maxValue = valueKey === 'total' ? maxRevenue : maxQuantity;
+              const x = getX(index);
+              const y = getY(value, maxValue);
+              
+              return (
+                <g key={index}>
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="4"
+                    fill={color}
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                  {/* Value label */}
+                  <text
+                    x={x}
+                    y={y - 10}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontWeight="bold"
+                    fill={color}
+                  >
+                    {valueKey === 'total' ? value.toFixed(0) : value}
+                  </text>
+                  {/* Date label */}
+                  <text
+                    x={x}
+                    y={chartHeight - 5}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="#666"
+                  >
+                    {item.date.getDate()}/{item.date.getMonth() + 1}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Axes */}
+            <line
+              x1={padding}
+              y1={chartHeight - padding}
+              x2={chartWidth - padding}
+              y2={chartHeight - padding}
+              stroke="#ddd"
+              strokeWidth="2"
+            />
+            <line
+              x1={padding}
+              y1={padding}
+              x2={padding}
+              y2={chartHeight - padding}
+              stroke="#ddd"
+              strokeWidth="2"
+            />
+          </svg>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: "30px", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
@@ -200,76 +354,34 @@ const Analytics: React.FC = () => {
         gap: "20px",
         marginBottom: "30px"
       }}>
-        {/* Daily Revenue Chart */}
+        {/* Daily Revenue Line Chart */}
         <div style={{
           backgroundColor: "white",
           padding: "20px",
           borderRadius: "10px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
         }}>
-          <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>Daily Revenue</h3>
-          <div style={{ height: "200px", display: "flex", alignItems: "end", gap: "10px" }}>
-            {Object.entries(dailySales).map(([date, data]) => (
-              <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div
-                  style={{
-                    height: `${(data.total / maxRevenue) * 150}px`,
-                    backgroundColor: "#28a745",
-                    width: "20px",
-                    borderRadius: "5px 5px 0 0",
-                    minHeight: "5px"
-                  }}
-                />
-                <div style={{ fontSize: "10px", marginTop: "5px", writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
-                  {new Date(date).getDate()}/{new Date(date).getMonth() + 1}
-                </div>
-                <div style={{ fontSize: "10px", marginTop: "5px", fontWeight: "bold" }}>
-                  {data.total.toFixed(0)}
-                </div>
-              </div>
-            ))}
-            {Object.keys(dailySales).length === 0 && (
-              <div style={{ textAlign: "center", width: "100%", color: "#666", padding: "40px" }}>
-                No sales data available
-              </div>
-            )}
-          </div>
+          <LineChart 
+            data={dailySalesData}
+            valueKey="total"
+            color="#28a745"
+            title="Daily Revenue Trend"
+          />
         </div>
 
-        {/* Daily Transactions Chart */}
+        {/* Daily Transactions Line Chart */}
         <div style={{
           backgroundColor: "white",
           padding: "20px",
           borderRadius: "10px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
         }}>
-          <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>Daily Transactions</h3>
-          <div style={{ height: "200px", display: "flex", alignItems: "end", gap: "10px" }}>
-            {Object.entries(dailySales).map(([date, data]) => (
-              <div key={date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <div
-                  style={{
-                    height: `${(data.count / maxQuantity) * 150}px`,
-                    backgroundColor: "#007BFF",
-                    width: "20px",
-                    borderRadius: "5px 5px 0 0",
-                    minHeight: "5px"
-                  }}
-                />
-                <div style={{ fontSize: "10px", marginTop: "5px", writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
-                  {new Date(date).getDate()}/{new Date(date).getMonth() + 1}
-                </div>
-                <div style={{ fontSize: "10px", marginTop: "5px", fontWeight: "bold" }}>
-                  {data.count}
-                </div>
-              </div>
-            ))}
-            {Object.keys(dailySales).length === 0 && (
-              <div style={{ textAlign: "center", width: "100%", color: "#666", padding: "40px" }}>
-                No sales data available
-              </div>
-            )}
-          </div>
+          <LineChart 
+            data={dailySalesData}
+            valueKey="count"
+            color="#007BFF"
+            title="Daily Transactions Trend"
+          />
         </div>
       </div>
 
