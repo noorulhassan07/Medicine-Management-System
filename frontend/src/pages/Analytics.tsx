@@ -60,31 +60,59 @@ const Analytics: React.FC = () => {
     }
   });
 
-  // Calculate daily sales data for line charts - FIXED VERSION
+  // Calculate inventory data for first chart: Quantity in Inventory vs Revenue
+  const getInventoryVsRevenueData = () => {
+    // Group by medicine and calculate total revenue per medicine
+    const medicineRevenue = filteredSales.reduce((acc, sale) => {
+      if (!acc[sale.medicineName]) {
+        acc[sale.medicineName] = { revenue: 0, quantitySold: 0 };
+      }
+      acc[sale.medicineName].revenue += sale.totalAmount;
+      acc[sale.medicineName].quantitySold += sale.quantitySold;
+      return acc;
+    }, {} as Record<string, { revenue: number; quantitySold: number }>);
+
+    // Combine with current inventory data
+    const inventoryData = medicines.map(medicine => {
+      const salesData = medicineRevenue[medicine.name] || { revenue: 0, quantitySold: 0 };
+      return {
+        medicineName: medicine.name,
+        quantityInInventory: medicine.quantity,
+        totalRevenue: salesData.revenue,
+        quantitySold: salesData.quantitySold
+      };
+    });
+
+    return inventoryData
+      .filter(item => item.totalRevenue > 0) // Only show medicines with sales
+      .sort((a, b) => b.totalRevenue - a.totalRevenue) // Sort by revenue descending
+      .slice(0, 15); // Limit to top 15 for readability
+  };
+
+  // Calculate daily sales data for second chart: Quantity Sold vs Revenue
   const getDailySalesData = () => {
-    const dailyData: Record<string, { total: number; count: number; date: Date }> = {};
+    const dailyData: Record<string, { totalRevenue: number; totalQuantitySold: number; date: Date }> = {};
     
     filteredSales.forEach(sale => {
       const date = new Date(sale.saleDate);
-      // Use ISO string without time for consistent grouping
       const dateKey = date.toISOString().split('T')[0];
       
       if (!dailyData[dateKey]) {
-        dailyData[dateKey] = { total: 0, count: 0, date };
+        dailyData[dateKey] = { totalRevenue: 0, totalQuantitySold: 0, date };
       }
-      dailyData[dateKey].total += sale.totalAmount;
-      dailyData[dateKey].count += 1;
+      dailyData[dateKey].totalRevenue += sale.totalAmount;
+      dailyData[dateKey].totalQuantitySold += sale.quantitySold;
     });
 
-    // Convert to array and sort by date
     return Object.entries(dailyData)
       .map(([dateKey, data]) => ({
         ...data,
-        date: new Date(dateKey) // Ensure proper date object
+        date: new Date(dateKey)
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   };
 
+  const inventoryVsRevenueData = getInventoryVsRevenueData();
   const dailySalesData = getDailySalesData();
 
   // Top selling medicines
@@ -106,21 +134,40 @@ const Analytics: React.FC = () => {
   const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.totalAmount, 0);
   const totalTransactions = filteredSales.length;
   const averageSale = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+  const totalQuantitySold = filteredSales.reduce((sum, sale) => sum + sale.quantitySold, 0);
 
   // Find max values for chart scaling
-  const maxRevenue = dailySalesData.length > 0 ? Math.max(...dailySalesData.map(d => d.total), 1) : 1;
-  const maxQuantity = dailySalesData.length > 0 ? Math.max(...dailySalesData.map(d => d.count), 1) : 1;
+  const maxInventoryRevenue = inventoryVsRevenueData.length > 0 ? 
+    Math.max(...inventoryVsRevenueData.map(d => d.totalRevenue), 1) : 1;
+  const maxInventoryQuantity = inventoryVsRevenueData.length > 0 ? 
+    Math.max(...inventoryVsRevenueData.map(d => d.quantityInInventory), 1) : 1;
+  
+  const maxDailyRevenue = dailySalesData.length > 0 ? 
+    Math.max(...dailySalesData.map(d => d.totalRevenue), 1) : 1;
+  const maxDailyQuantity = dailySalesData.length > 0 ? 
+    Math.max(...dailySalesData.map(d => d.totalQuantitySold), 1) : 1;
 
-  // Simple Line Chart Component - FIXED VERSION
-  const LineChart = ({ data, valueKey, color, title }: { 
-    data: { date: Date; total: number; count: number }[], 
-    valueKey: 'total' | 'count',
-    color: string,
-    title: string 
+  // Scatter Plot Component for Inventory vs Revenue
+  const ScatterPlot = ({ 
+    data, 
+    xKey, 
+    yKey, 
+    xLabel, 
+    yLabel, 
+    title,
+    color 
+  }: { 
+    data: any[], 
+    xKey: string, 
+    yKey: string, 
+    xLabel: string,
+    yLabel: string,
+    title: string,
+    color: string 
   }) => {
-    const chartHeight = 200;
+    const chartHeight = 300;
     const chartWidth = 500;
-    const padding = 40;
+    const padding = 60;
 
     if (data.length === 0) {
       return (
@@ -135,54 +182,19 @@ const Analytics: React.FC = () => {
             borderRadius: "8px",
             color: "#666"
           }}>
-            No sales data available for the selected period
+            No data available for the selected period
           </div>
         </div>
       );
     }
 
-    if (data.length === 1) {
-      // Handle single data point case
-      const singleValue = valueKey === 'total' ? data[0].total : data[0].count;
-      return (
-        <div>
-          <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>{title}</h3>
-          <div style={{ 
-            height: `${chartHeight}px`, 
-            display: "flex", 
-            flexDirection: "column",
-            alignItems: "center", 
-            justifyContent: "center",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "8px",
-            color: color,
-            fontWeight: "bold",
-            fontSize: "24px"
-          }}>
-            <div>{singleValue} {valueKey === 'total' ? 'PKR' : ''}</div>
-            <div style={{ fontSize: "14px", color: "#666", marginTop: "10px" }}>
-              Only one data point available
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    const getX = (index: number) => {
-      return padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
+    const getX = (value: number, maxValue: number) => {
+      return padding + ((value / maxValue) * (chartWidth - 2 * padding));
     };
 
     const getY = (value: number, maxValue: number) => {
-      const scaledValue = (value / maxValue) * (chartHeight - 2 * padding);
-      return chartHeight - padding - scaledValue;
+      return chartHeight - padding - ((value / maxValue) * (chartHeight - 2 * padding));
     };
-
-    // Generate points for the polyline
-    const points = data.map((item, index) => {
-      const value = valueKey === 'total' ? item.total : item.count;
-      const maxValue = valueKey === 'total' ? maxRevenue : maxQuantity;
-      return `${getX(index)},${getY(value, maxValue)}`;
-    }).join(' ');
 
     return (
       <div>
@@ -192,7 +204,7 @@ const Analytics: React.FC = () => {
             {/* Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
               <line
-                key={i}
+                key={`x-grid-${i}`}
                 x1={padding}
                 y1={padding + (chartHeight - 2 * padding) * ratio}
                 x2={chartWidth - padding}
@@ -201,13 +213,24 @@ const Analytics: React.FC = () => {
                 strokeWidth="1"
               />
             ))}
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+              <line
+                key={`y-grid-${i}`}
+                x1={padding + (chartWidth - 2 * padding) * ratio}
+                y1={padding}
+                x2={padding + (chartWidth - 2 * padding) * ratio}
+                y2={chartHeight - padding}
+                stroke="#f0f0f0"
+                strokeWidth="1"
+              />
+            ))}
 
             {/* Y-axis labels */}
             {[0, 0.5, 1].map((ratio, i) => {
-              const value = Math.round((valueKey === 'total' ? maxRevenue : maxQuantity) * ratio);
+              const value = Math.round(maxInventoryRevenue * ratio);
               return (
                 <text
-                  key={i}
+                  key={`y-label-${i}`}
                   x={padding - 5}
                   y={padding + (chartHeight - 2 * padding) * (1 - ratio)}
                   textAnchor="end"
@@ -220,53 +243,61 @@ const Analytics: React.FC = () => {
               );
             })}
 
-            {/* Line */}
-            <polyline
-              fill="none"
-              stroke={color}
-              strokeWidth="3"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              points={points}
-            />
+            {/* X-axis labels */}
+            {[0, 0.5, 1].map((ratio, i) => {
+              const value = Math.round(maxInventoryQuantity * ratio);
+              return (
+                <text
+                  key={`x-label-${i}`}
+                  x={padding + (chartWidth - 2 * padding) * ratio}
+                  y={chartHeight - padding + 15}
+                  textAnchor="middle"
+                  fontSize="10"
+                  fill="#666"
+                >
+                  {value}
+                </text>
+              );
+            })}
 
             {/* Data points */}
             {data.map((item, index) => {
-              const value = valueKey === 'total' ? item.total : item.count;
-              const maxValue = valueKey === 'total' ? maxRevenue : maxQuantity;
-              const x = getX(index);
-              const y = getY(value, maxValue);
+              const xValue = item[xKey];
+              const yValue = item[yKey];
+              const x = getX(xValue, xKey === 'quantityInInventory' ? maxInventoryQuantity : maxDailyQuantity);
+              const y = getY(yValue, yKey === 'totalRevenue' ? maxInventoryRevenue : maxDailyRevenue);
               
               return (
                 <g key={index}>
                   <circle
                     cx={x}
                     cy={y}
-                    r="4"
+                    r="6"
                     fill={color}
                     stroke="white"
                     strokeWidth="2"
+                    opacity="0.7"
                   />
                   {/* Value label */}
                   <text
                     x={x}
-                    y={y - 10}
+                    y={y - 12}
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize="9"
                     fontWeight="bold"
                     fill={color}
                   >
-                    {valueKey === 'total' ? value.toFixed(0) : value}
+                    {item.medicineName || `Day ${index + 1}`}
                   </text>
-                  {/* Date label */}
+                  {/* Coordinates label */}
                   <text
                     x={x}
-                    y={chartHeight - 10}
+                    y={y + 20}
                     textAnchor="middle"
-                    fontSize="10"
+                    fontSize="8"
                     fill="#666"
                   >
-                    {item.date.getDate()}/{item.date.getMonth() + 1}
+                    ({xValue}, {yValue.toFixed(0)})
                   </text>
                 </g>
               );
@@ -289,6 +320,29 @@ const Analytics: React.FC = () => {
               stroke="#ddd"
               strokeWidth="2"
             />
+
+            {/* Axis titles */}
+            <text
+              x={chartWidth / 2}
+              y={chartHeight - 10}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="bold"
+              fill="#333"
+            >
+              {xLabel}
+            </text>
+            <text
+              x={10}
+              y={chartHeight / 2}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="bold"
+              fill="#333"
+              transform={`rotate(-90, 10, ${chartHeight / 2})`}
+            >
+              {yLabel}
+            </text>
           </svg>
         </div>
       </div>
@@ -314,7 +368,7 @@ const Analytics: React.FC = () => {
         📈 Sales Analytics
       </h2>
 
-      {/* Debug Info - You can remove this later */}
+      {/* Debug Info */}
       <div style={{
         backgroundColor: "#fff3cd",
         padding: "10px",
@@ -323,7 +377,7 @@ const Analytics: React.FC = () => {
         border: "1px solid #ffeaa7",
         fontSize: "12px"
       }}>
-        <strong>Debug Info:</strong> {filteredSales.length} sales found, {dailySalesData.length} days with data
+        <strong>Data Summary:</strong> {filteredSales.length} sales, {inventoryVsRevenueData.length} medicines with sales, {dailySalesData.length} days with data
       </div>
 
       {/* Time Range Filter */}
@@ -400,8 +454,22 @@ const Analytics: React.FC = () => {
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           textAlign: "center"
         }}>
-          <h3 style={{ margin: "0 0 10px 0", color: "#333" }}>Average Sale</h3>
+          <h3 style={{ margin: "0 0 10px 0", color: "#333" }}>Quantity Sold</h3>
           <div style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107" }}>
+            {totalQuantitySold}
+          </div>
+          <small style={{ color: "#666" }}>Units sold</small>
+        </div>
+
+        <div style={{
+          backgroundColor: "white",
+          padding: "20px",
+          borderRadius: "10px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          textAlign: "center"
+        }}>
+          <h3 style={{ margin: "0 0 10px 0", color: "#333" }}>Average Sale</h3>
+          <div style={{ fontSize: "24px", fontWeight: "bold", color: "#e83e8c" }}>
             {averageSale.toFixed(2)} PKR
           </div>
           <small style={{ color: "#666" }}>Per transaction</small>
@@ -415,34 +483,46 @@ const Analytics: React.FC = () => {
         gap: "20px",
         marginBottom: "30px"
       }}>
-        {/* Daily Revenue Line Chart */}
+        {/* Inventory vs Revenue Scatter Plot */}
         <div style={{
           backgroundColor: "white",
           padding: "20px",
           borderRadius: "10px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
         }}>
-          <LineChart 
-            data={dailySalesData}
-            valueKey="total"
+          <ScatterPlot 
+            data={inventoryVsRevenueData}
+            xKey="quantityInInventory"
+            yKey="totalRevenue"
+            xLabel="Quantity in Inventory"
+            yLabel="Total Revenue (PKR)"
+            title="Inventory vs Revenue by Medicine"
             color="#28a745"
-            title="Daily Revenue Trend (PKR)"
           />
+          <div style={{ fontSize: "12px", color: "#666", marginTop: "10px", textAlign: "center" }}>
+            Each point represents a medicine. Shows relationship between current stock levels and total revenue generated.
+          </div>
         </div>
 
-        {/* Daily Transactions Line Chart */}
+        {/* Daily Sales: Quantity Sold vs Revenue */}
         <div style={{
           backgroundColor: "white",
           padding: "20px",
           borderRadius: "10px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
         }}>
-          <LineChart 
+          <ScatterPlot 
             data={dailySalesData}
-            valueKey="count"
+            xKey="totalQuantitySold"
+            yKey="totalRevenue"
+            xLabel="Total Quantity Sold"
+            yLabel="Total Revenue (PKR)"
+            title="Daily Sales: Quantity vs Revenue"
             color="#007BFF"
-            title="Daily Transactions Trend"
           />
+          <div style={{ fontSize: "12px", color: "#666", marginTop: "10px", textAlign: "center" }}>
+            Each point represents a day. Shows relationship between units sold and revenue generated per day.
+          </div>
         </div>
       </div>
 
@@ -460,39 +540,54 @@ const Analytics: React.FC = () => {
               <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Medicine</th>
               <th style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #ddd" }}>Quantity Sold</th>
               <th style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #ddd" }}>Revenue</th>
+              <th style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #ddd" }}>Current Stock</th>
             </tr>
           </thead>
           <tbody>
-            {topMedicinesArray.map((med, index) => (
-              <tr key={med.name}>
-                <td style={{ padding: "12px", borderBottom: "1px solid #eee" }}>
-                  <span style={{ 
-                    backgroundColor: "#007BFF", 
-                    color: "white", 
-                    borderRadius: "50%", 
-                    width: "24px", 
-                    height: "24px", 
-                    display: "inline-flex", 
-                    alignItems: "center", 
-                    justifyContent: "center",
-                    marginRight: "10px",
-                    fontSize: "12px"
+            {topMedicinesArray.map((med, index) => {
+              const medicine = medicines.find(m => m.name === med.name);
+              const currentStock = medicine ? medicine.quantity : 0;
+              
+              return (
+                <tr key={med.name}>
+                  <td style={{ padding: "12px", borderBottom: "1px solid #eee" }}>
+                    <span style={{ 
+                      backgroundColor: "#007BFF", 
+                      color: "white", 
+                      borderRadius: "50%", 
+                      width: "24px", 
+                      height: "24px", 
+                      display: "inline-flex", 
+                      alignItems: "center", 
+                      justifyContent: "center",
+                      marginRight: "10px",
+                      fontSize: "12px"
+                    }}>
+                      {index + 1}
+                    </span>
+                    {med.name}
+                  </td>
+                  <td style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #eee", fontWeight: "bold" }}>
+                    {med.quantity}
+                  </td>
+                  <td style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #eee", color: "#28a745", fontWeight: "bold" }}>
+                    {med.revenue.toFixed(2)} PKR
+                  </td>
+                  <td style={{ 
+                    padding: "12px", 
+                    textAlign: "right", 
+                    borderBottom: "1px solid #eee", 
+                    fontWeight: "bold",
+                    color: currentStock < 15 ? "#dc3545" : currentStock < 30 ? "#ffc107" : "#28a745"
                   }}>
-                    {index + 1}
-                  </span>
-                  {med.name}
-                </td>
-                <td style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #eee", fontWeight: "bold" }}>
-                  {med.quantity}
-                </td>
-                <td style={{ padding: "12px", textAlign: "right", borderBottom: "1px solid #eee", color: "#28a745", fontWeight: "bold" }}>
-                  {med.revenue.toFixed(2)} PKR
-                </td>
-              </tr>
-            ))}
+                    {currentStock} units
+                  </td>
+                </tr>
+              );
+            })}
             {topMedicinesArray.length === 0 && (
               <tr>
-                <td colSpan={3} style={{ padding: "20px", textAlign: "center", color: "#666" }}>
+                <td colSpan={4} style={{ padding: "20px", textAlign: "center", color: "#666" }}>
                   No sales data available
                 </td>
               </tr>
