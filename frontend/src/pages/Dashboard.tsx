@@ -17,12 +17,33 @@ const Dashboard: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
 
   useEffect(() => {
-    // CHANGED: Use the environment variable
-    fetch(`${API_URL}/api/medicines`)
-      .then((res) => res.json())
-      .then((data) => setMedicines(data))
-      .catch((err) => console.error(err));
+    fetchMedicines();
   }, []);
+
+  const fetchMedicines = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/medicines`);
+      const data = await res.json();
+      setMedicines(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
+      try {
+        await fetch(`${API_URL}/api/medicines/${id}`, {
+          method: "DELETE",
+        });
+        // Refresh the medicines list
+        await fetchMedicines();
+        alert("✅ Medicine deleted successfully!");
+      } catch (error) {
+        alert("❌ Failed to delete medicine");
+      }
+    }
+  };
 
   const getStatusDot = (expiry: string, qty: number) => {
     const expDate = new Date(expiry);
@@ -38,22 +59,22 @@ const Dashboard: React.FC = () => {
 
   return (
     <div style={{ padding: "30px" }}>
-<h2
-  style={{
-    marginBottom: "25px",
-    fontWeight: "bold",
-    fontSize: "28px",
-    background: "linear-gradient(90deg, #007BFF, #00C6FF)",
-    color: "white",
-    display: "inline-block",
-    padding: "12px 25px",
-    borderRadius: "50px",
-    boxShadow: "0 4px 10px rgba(0, 123, 255, 0.3)",
-    letterSpacing: "1px",
-  }}
->
-  📊 Medicine Dashboard
-</h2>
+      <h2
+        style={{
+          marginBottom: "25px",
+          fontWeight: "bold",
+          fontSize: "28px",
+          background: "linear-gradient(90deg, #007BFF, #00C6FF)",
+          color: "white",
+          display: "inline-block",
+          padding: "12px 25px",
+          borderRadius: "50px",
+          boxShadow: "0 4px 10px rgba(0, 123, 255, 0.3)",
+          letterSpacing: "1px",
+        }}
+      >
+        📊 Medicine Dashboard
+      </h2>
       <table
         style={{
           width: "100%",
@@ -74,6 +95,7 @@ const Dashboard: React.FC = () => {
             <th style={thStyle}>Entry</th>
             <th style={thStyle}>Price (PKR)</th>
             <th style={thStyle}>Status</th>
+            <th style={thStyle}>Actions</th> {/* NEW COLUMN */}
           </tr>
         </thead>
         <tbody>
@@ -110,12 +132,32 @@ const Dashboard: React.FC = () => {
                       <small style={{ color: "#555" }}>{status.label}</small>
                     </div>
                   </td>
+                  <td style={tdStyle}>
+                    {/* DELETE BUTTON */}
+                    <button
+                      onClick={() => handleDelete(m._id, m.name)}
+                      style={{
+                        backgroundColor: "#dc3545",
+                        color: "white",
+                        border: "none",
+                        padding: "6px 12px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#c82333"}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#dc3545"}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </td>
                 </tr>
               );
             })
           ) : (
             <tr>
-              <td colSpan={8} style={{ textAlign: "center", padding: "15px" }}>
+              <td colSpan={9} style={{ textAlign: "center", padding: "15px" }}>
                 No medicines found.
               </td>
             </tr>
