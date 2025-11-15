@@ -21,6 +21,8 @@ const History: React.FC = () => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     fetchHistory();
@@ -28,12 +30,65 @@ const History: React.FC = () => {
 
   const fetchHistory = async () => {
     try {
+      setLoading(true);
+      setError("");
+      console.log("Fetching history from:", `${API_URL}/api/medicines/history`);
+      
       const res = await fetch(`${API_URL}/api/medicines/history`);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
+      console.log("History data received:", data);
       setHistory(data);
     } catch (err) {
       console.error("Failed to fetch history", err);
+      setError(err instanceof Error ? err.message : "Failed to load history");
+      // Set some mock data for testing if API fails
+      setHistory(getMockHistoryData());
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Mock data for testing if API is not available
+  const getMockHistoryData = (): HistoryEntry[] => {
+    return [
+      {
+        _id: "1",
+        medicineId: "med1",
+        medicineName: "Paracetamol",
+        action: "sale",
+        details: "Sold to customer",
+        timestamp: new Date().toISOString(),
+        quantity: 10,
+        price: 5,
+        totalAmount: 50,
+        customerName: "John Doe"
+      },
+      {
+        _id: "2",
+        medicineId: "med2",
+        medicineName: "Aspirin",
+        action: "created",
+        details: "Added new medicine",
+        timestamp: new Date(Date.now() - 86400000).toISOString(),
+        quantity: 100,
+        price: 8
+      },
+      {
+        _id: "3",
+        medicineId: "med3",
+        medicineName: "Vitamin C",
+        action: "updated",
+        details: "Updated stock quantity",
+        timestamp: new Date(Date.now() - 172800000).toISOString(),
+        quantity: 50,
+        price: 15
+      }
+    ];
   };
 
   const getActionColor = (action: string) => {
@@ -81,16 +136,6 @@ const History: React.FC = () => {
         if (entry.details && entry.details !== 'Medicine updated') {
           return entry.details;
         }
-        if (entry.previousData && entry.newData) {
-          const changes = [];
-          if (entry.previousData.quantity !== entry.newData.quantity) {
-            changes.push(`Stock: ${entry.previousData.quantity} → ${entry.newData.quantity}`);
-          }
-          if (entry.previousData.price !== entry.newData.price) {
-            changes.push(`Price: ${entry.previousData.price} → ${entry.newData.price} PKR`);
-          }
-          return changes.length > 0 ? changes.join(', ') : 'Details updated';
-        }
         return 'Medicine information updated';
       
       case 'restocked':
@@ -132,6 +177,17 @@ const History: React.FC = () => {
 
   const groupedHistory = groupHistoryByDate(filteredHistory);
 
+  if (loading) {
+    return (
+      <div style={{ padding: "30px", backgroundColor: "#f8f9fa", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "48px", marginBottom: "20px" }}>⏳</div>
+          <div style={{ fontSize: "18px", color: "#666" }}>Loading history...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: "30px", backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
       <h2
@@ -150,6 +206,20 @@ const History: React.FC = () => {
       >
         📜 Business Activity Log
       </h2>
+
+      {/* Error Message */}
+      {error && (
+        <div style={{
+          backgroundColor: "#f8d7da",
+          color: "#721c24",
+          padding: "15px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          border: "1px solid #f5c6cb"
+        }}>
+          <strong>⚠️ Connection Issue:</strong> {error}. Showing sample data for demonstration.
+        </div>
+      )}
 
       {/* Filters and Search */}
       <div style={{
