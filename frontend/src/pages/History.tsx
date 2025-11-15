@@ -30,8 +30,7 @@ const History: React.FC = () => {
       setError("");
       console.log("Fetching history from:", `${API_URL}/api/medicines/history`);
       
-      const res = await fetch(`${API_URL}/api/medicines/history`);
-      
+      const res = await fetch(`${API_URL}/api/medicines/history/all`);
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
